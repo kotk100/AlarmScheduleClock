@@ -6,7 +6,10 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
+    "bcryptjs": "^2.3.0",
     "body-parser": "~1.15.2",
+    "compression": "^1.6.2",
+    "connect-flash": "^0.1.1",
     "cookie-parser": "^1.4.3",
     "debug": "~2.2.0",
     "express": "~4.14.0",
@@ -17,8 +20,12 @@
     "i18n": "^0.8.3",
     "jquery": "^3.1.0",
     "morgan": "~1.7.0",
+    "mysql": "^2.11.1",
     "node-sass-middleware": "0.9.8",
+    "nodemailer": "^2.5.0",
     "npm": "^3.10.5",
+    "passport": "^0.3.2",
+    "passport-local": "^1.0.0",
     "serve-favicon": "~2.3.0"
   }
 }

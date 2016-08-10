@@ -1,0 +1,22 @@
+<div class="content-wrapper">
+    <p class="title">{{ i18n 'lblRegister' }}</p>
+    <form action="/{{ lang }}/login/register" method="post">
+        <div class="form-group">
+            <label>{{ i18n 'lblUsername' }}</label>
+            <input type="text" class="form-control" name="username">
+        </div>
+        <div class="form-group">
+            <label>{{ i18n 'lblPassword' }}</label>
+            <input type="password" class="form-control" name="password">
+        </div>
+        <div class="form-group">
+            <label>{{ i18n 'lblEmail' }}</label>
+            <input type="email" class="form-control" name="email">
+        </div>
+
+        <button type="submit" class="btn btn-info btn-lg pull-right">{{ i18n 'lblCreateUser' }}</button>
+    </form>
+    {{#if message}}
+        <p class="message">{{ message }}</p>
+    {{/if}}
+</div>

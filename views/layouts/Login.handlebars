@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ i18n 'siteTitle' }}</title>
+    <link rel="stylesheet" href="/public/stylesheets/bootstrap.min.css">
+    <link rel='stylesheet' href='/public/stylesheets/style_login.css' />
+    <script src="/public/javascripts/jquery-3.1.0.min.js"></script>
+</head>
+<body>
+<div class="centerFlex">
+    {{{body}}}
+</div>
+<footer class="footer">
+    <div class="container-fluid fill">
+        <div class="row footer-row">
+            <div class="col-md-4"></div>
+            <div class="col-md-5">
+                <a href="/{{ lang }}/about" class="btn btn-default btn-xs">{{ i18n 'lblAbout'}}</a>
+            </div>
+            <div class="col-md-3">
+                {{ i18n 'lblLanguage' }}
+                <a href="/en/{{ url }}" class="btn btn-default btn-xs">EN</a>
+                <a href="/sl/{{ url }}" class="btn btn-default btn-xs">SL</a>
+            </div>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

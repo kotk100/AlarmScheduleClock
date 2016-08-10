@@ -1,0 +1,19 @@
+<div class="content-wrapper">
+    <span class="title">{{ message }}</span><br>
+    <span class="text-small text-muted">
+        {{{ i18n 'redirectAfterTime' }}}
+        <a href="/{{ lang }}/login">{{ i18n 'redirectClickHere'}}</a>
+    </span>
+</div>
+<script>
+    $(document).ready(function(){
+        var timeout = 10;
+
+        window.setInterval(function(){
+            if(timeout == 0)
+                window.location.href = '{{ redirectUrl }}';
+            timeout--;
+            $('#timeout').text(timeout);
+        }, 1000);
+    });
+</script>

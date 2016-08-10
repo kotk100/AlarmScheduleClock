@@ -3,30 +3,47 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
-var cookieParser = require('cookie-parser');
+//TODO remove
+//var cookieParser = require('cookie-parser');
 var helmet = require('helmet');
 var i18n = require('i18n');
 var session = require('express-session');
 var exphbs  = require('express-handlebars');
+var mysql = require('mysql');
+var passport = require('./config/passport');
+var flash = require('connect-flash');
+var compression = require('compression')
 
-var routes = require('./routes/index');
-var users = require('./routes/users');
+var index = require('./routes/index');
 var login = require('./routes/login');
+var about = require('./routes/about');
+var settings = require('./routes/settings');
 
-var app = express();
-
-app.use('/', routes);
-app.use('/users', users);
-app.use('/login', login);
-
-
+var locales = ['en', 'sl'];
 //Configure localization, currently there will be only 2 languages
 i18n.configure({
-  locales: ['en-US', 'si-SL'],
-  defaultLocale: 'en-US',
-  cookie: 'D.9D}Y^@#]03N[r<<S(j+lr-rTwJWBcb',
-  directory: __dirname  + '/locales'
+  locales: locales,
+  defaultLocale: 'en',
+  directory: __dirname  + '/locales',
+  syncFiles: true
 });
+
+//TODO unrelated: Retry querys if connection to server fails
+//TODO retry other operations
+//TODO modify DB model: add indexes for common searches (like by username/email)
+//TODO setup nginx and let nginx handle ssl (tls to be specific)
+
+//Define as global, TODO would using module.exports be better?
+DBConnectionPool  = mysql.createPool({
+  connectionLimit : 10,
+  host            : 'localhost',
+  user            : 'WakeMeUp',
+  password        : '4020fcf487d41675f2ee0965c00f3cbc',
+  database        : 'wakemeup'
+});
+
+var app = express();
+app.use(compression());
 
 //Configure express-session
 app.use(session({
@@ -35,32 +52,69 @@ app.use(session({
   saveUninitialized: false,
   rolling: true,
   cookie: {
-    path: '/',
-    httpOnly: true,
-    secure: true,
-    maxAge: 24*60*60*1000  //Sesion is active for 1 day
+	path: '/',
+	httpOnly: true,
+	secure: false, //TODO set to true after setting up ssl, if set to true and https is not used login will fail: https://stackoverflow.com/questions/11277779/passportjs-deserializeuser-never-called
+	maxAge: 24*60*60*1000  //Sesion is active for 1 day
   }
 }));
 
-// view engine setup, we are using express-handlebars
 app.engine('handlebars', exphbs({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
 
-//use favicon in public
-app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+//use favicon located in public/images
+app.use(favicon(path.join(__dirname, 'public', 'images', 'favicon.ico')));
 app.use(helmet());
-app.use(cookieParser());
+//app.use(cookieParser());
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(i18n.init);
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash());
+
+//TODO will it compile every time in production also? if yes change it!
 app.use(require('node-sass-middleware')({
-  src: path.join(__dirname, 'public'),
-  dest: path.join(__dirname, 'public'),
-  indentedSyntax: true,
-  sourceMap: true
+    src: path.join(__dirname, 'public/stylesheets/sass'),
+    dest: path.join(__dirname, 'public/stylesheets'),
+    force: true,
+    indentedSyntax: true,
+    sourceMap: true,
+    outputStyle: 'compressed',
+    prefix: '/public/stylesheets'
 }));
-app.use(express.static(path.join(__dirname, 'public')));
+
+//Serve static files
+app.use('/public', express.static(__dirname + "/public"));
+
+//Set language, if not defined redirect to default and check user permissions
+app.use(function(req, res, next){
+    //Split request url into language and url
+    var match = req.url.match(/^\/((en|sl))?(\/?.*)?$/i);
+    if(match){
+        //Set language according to url or to default
+        if(match[2]) {
+            req.locale = match[2];
+        } else {
+            req.locale = req.locale && locales.indexOf(req.locale) > -1 ? req.locale : 'en';
+            return res.redirect('/' + req.locale + req.url);
+        }
+        req.setLocale(req.locale);
+
+        req.url = match[3] || '/';
+    }
+    //Do not allow user acces to login-only area! Non loged in users can only access /login and /about sub-domains.
+    if(!req.user && !req.url.match(/^\/(login|about)/i))
+        return res.redirect('/' + req.locale + '/login');
+
+    return next();
+});
+
+app.use('/login', login);
+app.use('/about', about);
+app.use('/', index);
+app.use('/settings', settings);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -75,11 +129,11 @@ app.use(function(req, res, next) {
 // will print stacktrace
 if (app.get('env') === 'development') {
   app.use(function(err, req, res, next) {
-    res.status(err.status || 500);
-    res.render('error', {
-      message: err.message,
-      error: err
-    });
+	res.status(err.status || 500);
+	res.render('error', {
+	  message: err.message,
+	  error: err
+	});
   });
 }
 
@@ -88,8 +142,8 @@ if (app.get('env') === 'development') {
 app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error', {
-    message: err.message,
-    error: {}
+	message: err.message,
+	error: {}
   });
 });
 
